@@ -1,0 +1,51 @@
+version: "3.9"
+
+# =============================================================
+# CTI Platform
+# docker-compose.yml
+#
+# Infrastructure reference for the CTI collection/processing
+# backend. Credentials are read from environment variables
+# (see .env.example) - never hardcoded here.
+# =============================================================
+
+services:
+
+  cti-postgres:
+    image: postgres:17
+    container_name: cti-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB_NAME:-cti_db}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - cti_postgres_data:/var/lib/postgresql/data
+    networks:
+      - cti-network
+
+  cti-pgadmin:
+    image: dpage/pgadmin4
+    container_name: cti-pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+    ports:
+      - "8080:80"
+    volumes:
+      - cti_pgadmin_data:/var/lib/pgadmin
+    networks:
+      - cti-network
+    depends_on:
+      - cti-postgres
+
+networks:
+  cti-network:
+    driver: bridge
+
+volumes:
+  cti_postgres_data:
+  cti_pgadmin_data:

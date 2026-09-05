@@ -1,0 +1,336 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "CTI Ingestion Gateway",
+    "description": "Central API for a Cyber Threat Intelligence platform. Exposes ingestion endpoints for collection probes (unauthenticated, restricted at the network level) and endpoints consumed by the analyst dashboard (JWT-protected).",
+    "version": "1.0.0"
+  },
+  "servers": [
+    { "url": "http://localhost:8000", "description": "Local / internal server" }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "tags": [
+    { "name": "Health", "description": "Availability check" },
+    { "name": "Auth", "description": "Authentication and session management" },
+    { "name": "Crawler Ingestion", "description": "Endpoints called by collection probes - unauthenticated, restricted by firewall" },
+    { "name": "Watchlist", "description": "Watchlist management" },
+    { "name": "IOC", "description": "Indicators of compromise" },
+    { "name": "Threat Intelligence", "description": "Threat analysis and scoring" },
+    { "name": "Reports", "description": "Intelligence report generation" },
+    { "name": "Crawler Sources", "description": "Collection source management (Tor, Telegram)" },
+    { "name": "Discovery", "description": "Proactive discovery engine" }
+  ],
+  "paths": {
+
+    "/": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Service health check",
+        "responses": {
+          "200": {
+            "description": "Service operational",
+            "content": { "application/json": { "example": { "message": "CTI Engine is running" } } }
+          }
+        }
+      }
+    },
+
+    "/auth/login": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Authenticate and obtain a JWT token",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": { "username": "analyst", "password": "********" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "JWT token returned", "content": { "application/json": { "example": { "token": "eyJhbGciOiJIUzI1NiIs..." } } } },
+          "401": { "description": "Invalid credentials" }
+        }
+      }
+    },
+
+    "/auth/me": {
+      "get": {
+        "tags": ["Auth"],
+        "summary": "Get current authenticated user info",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "User profile" } }
+      }
+    },
+
+    "/auth/change-password": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Change the current user's password",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "Password updated" } }
+      }
+    },
+
+    "/alerts": {
+      "post": {
+        "tags": ["Crawler Ingestion"],
+        "summary": "Submit a new alert from a collection probe",
+        "description": "No JWT authentication by design - protected exclusively by a firewall rule restricting port access to the collection machine's IP.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "keyword_id": 3,
+                "source": "Telegram",
+                "content": "Raw alert text...",
+                "severity": "HIGH"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Alert inserted", "content": { "application/json": { "example": { "status": "success", "alert_id": 1042 } } } }
+        }
+      }
+    },
+
+    "/crawler/watchlist": {
+      "get": {
+        "tags": ["Crawler Ingestion"],
+        "summary": "Fetch the watchlist for use by collection probes",
+        "responses": { "200": { "description": "List of monitored keywords" } }
+      }
+    },
+
+    "/crawler/sources": {
+      "get": {
+        "tags": ["Crawler Ingestion"],
+        "summary": "Fetch collection targets (Tor, Telegram) for use by collection probes",
+        "parameters": [
+          { "name": "source_type", "in": "query", "required": true, "schema": { "type": "string", "enum": ["tor_onion", "telegram_channel"] } }
+        ],
+        "responses": { "200": { "description": "List of active sources" } }
+      }
+    },
+
+    "/watchlist": {
+      "get": {
+        "tags": ["Watchlist"],
+        "summary": "List the full watchlist",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "Watchlist entries" } }
+      },
+      "post": {
+        "tags": ["Watchlist"],
+        "summary": "Add a keyword to the watchlist",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "example": { "keyword": "example.com", "category": "Domain" } } }
+        },
+        "responses": { "200": { "description": "Item added" } }
+      }
+    },
+
+    "/watchlist/{item_id}": {
+      "delete": {
+        "tags": ["Watchlist"],
+        "summary": "Remove a watchlist item",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "item_id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": { "200": { "description": "Item removed" } }
+      }
+    },
+
+    "/ioc": {
+      "get": {
+        "tags": ["IOC"],
+        "summary": "List extracted indicators of compromise",
+        "description": "Email-type indicators include a paired_passwords field when a password was extracted from the same source alert.",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "List of IOCs" } }
+      }
+    },
+
+    "/summary": {
+      "get": {
+        "tags": ["IOC"],
+        "summary": "Indicator breakdown by type",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "Count by indicator type" } }
+      }
+    },
+
+    "/correlation": {
+      "get": {
+        "tags": ["IOC"],
+        "summary": "Alerts grouped by matched watchlist keyword",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "Correlated events" } }
+      }
+    },
+
+    "/threat-intelligence": {
+      "get": {
+        "tags": ["Threat Intelligence"],
+        "summary": "Combined analysis results (BIN, phishing, WHOIS, VirusTotal)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "Threat analyses" } }
+      }
+    },
+
+    "/reports": {
+      "get": {
+        "tags": ["Reports"],
+        "summary": "List generated reports",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "List of report files" } }
+      }
+    },
+
+    "/reports/generate": {
+      "post": {
+        "tags": ["Reports"],
+        "summary": "Generate a report on demand",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "Report generated" } }
+      }
+    },
+
+    "/reports/{filename}": {
+      "get": {
+        "tags": ["Reports"],
+        "summary": "Fetch a report's content",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "filename", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "Report content" } }
+      },
+      "delete": {
+        "tags": ["Reports"],
+        "summary": "Delete a report",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "filename", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "Report deleted" } }
+      }
+    },
+
+    "/reports/auto": {
+      "get": {
+        "tags": ["Reports"],
+        "summary": "Get daily auto-generation status",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "Auto-generation status" } }
+      },
+      "post": {
+        "tags": ["Reports"],
+        "summary": "Enable or disable daily auto-generation",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "example": { "enabled": true } } }
+        },
+        "responses": { "200": { "description": "Setting updated" } }
+      }
+    },
+
+    "/reports/manual": {
+      "post": {
+        "tags": ["Reports"],
+        "summary": "Save a manually written report",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "example": { "content": "Analyst-written report text..." } } }
+        },
+        "responses": { "200": { "description": "Report saved" } }
+      }
+    },
+
+    "/crawler/sources/all": {
+      "get": {
+        "tags": ["Crawler Sources"],
+        "summary": "List all collection sources (dashboard view)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "All sources, active and inactive" } }
+      }
+    },
+
+    "/crawler/sources/{source_id}/toggle": {
+      "post": {
+        "tags": ["Crawler Sources"],
+        "summary": "Activate or deactivate a collection source",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "source_id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": { "200": { "description": "Source state toggled" } }
+      }
+    },
+
+    "/discovery": {
+      "get": {
+        "tags": ["Discovery"],
+        "summary": "List discovered candidates pending review",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "status", "in": "query", "required": false, "schema": { "type": "string", "enum": ["pending", "approved", "rejected"], "default": "pending" } },
+          { "name": "source_type", "in": "query", "required": false, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Discovered candidates" } }
+      }
+    },
+
+    "/discovery/candidates": {
+      "post": {
+        "tags": ["Discovery"],
+        "summary": "Submit a candidate found by a discovery module",
+        "description": "No JWT authentication - called by automated scripts with no user session, some of which run on a separate machine with no direct database access.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "source_type": "domain",
+                "value": "example-typosquat.com",
+                "discovery_method": "link_following",
+                "confidence": 50,
+                "metadata": { "found_via": "example.com" }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Candidate inserted or already exists" } }
+      }
+    },
+
+    "/discovery/{candidate_id}/approve": {
+      "post": {
+        "tags": ["Discovery"],
+        "summary": "Approve a discovered candidate",
+        "description": "Behavior differs by source_type: a domain is inserted into watchlist, a Telegram channel or Tor site into crawler_sources, a GitHub repo or Pastebin paste is simply marked as reviewed.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "candidate_id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": { "200": { "description": "Candidate approved, action taken" } }
+      }
+    },
+
+    "/discovery/{candidate_id}/reject": {
+      "post": {
+        "tags": ["Discovery"],
+        "summary": "Reject a discovered candidate",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "candidate_id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": { "200": { "description": "Candidate rejected" } }
+      }
+    }
+
+  }
+}
