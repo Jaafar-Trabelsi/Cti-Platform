@@ -184,14 +184,14 @@ The platform adapts seamlessly across desktop, tablet, and mobile layouts while 
 ```text
 .
 Cti-Platform/                
-├── LICENSE                    # (Déjà présent) All Rights Reserved
-├── README.md                  # Le document maître de ton portfolio
-├── docker-compose.yml         # Preuve de ton infrastructure (FastAPI, Postgres, Tor)
+├── LICENSE                    
+├── README.md                  
+├── docker-compose.yml         #  Infrastructure (FastAPI, Postgres, Tor)
 ├── backend/
 │   └── openapi.json           # Le contrat d'API généré par FastAPI
 ├── database/
-│   └── schema.sql             # Les requêtes CREATE TABLE de ton architecture
-└── Images_Summary-Readme/     # (Déjà présent) Tes diagrammes et captures d'écran du dashboard
+│   └── schema.sql             # Les requêtes CREATE TABLE de l'architecture
+└── Images_Summary-Readme/     
 ```
 
 ## 📬 Contact
