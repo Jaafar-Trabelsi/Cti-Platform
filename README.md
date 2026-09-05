@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🛡️ CIH Bank CTI Platform
+# 🛡️ CTI Platform
 
 **A Cyber Threat Intelligence (CTI) and OSINT automation platform for monitoring, collecting, analyzing, and correlating threat data.**
 
