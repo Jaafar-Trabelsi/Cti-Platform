@@ -183,36 +183,16 @@ The platform adapts seamlessly across desktop, tablet, and mobile layouts while 
 
 ```text
 .
-├── cti_dashboard_front_end/   # React frontend (HTML, CSS, JSX)
-│
-├── cti_dashboard_back_end/    # FastAPI backend & Threat Intelligence Engine
-│   ├── crawlers/              # OSINT collection scripts
-│   ├── discovery/             # Automated target discovery scripts
-│   ├── .env.example           # Environment variable template
-│   └── crontabs/              # Cron job configurations
-│
-├── Images_Summary-Readme/     # Platform screenshots
-│
-├── Readme/                    # Step-by-step project documentation
-│   └── Debian/                # Debian setup, configuration & deployment guides
-│
-└── txt_png/                   # Architecture & system diagram resources
-    └── png/                   # PNG architecture / diagram images
+Cti-Platform/                
+├── LICENSE                    # (Déjà présent) All Rights Reserved
+├── README.md                  # Le document maître de ton portfolio
+├── docker-compose.yml         # Preuve de ton infrastructure (FastAPI, Postgres, Tor)
+├── backend/
+│   └── openapi.json           # Le contrat d'API généré par FastAPI
+├── database/
+│   └── schema.sql             # Les requêtes CREATE TABLE de ton architecture
+└── Images_Summary-Readme/     # (Déjà présent) Tes diagrammes et captures d'écran du dashboard
 ```
-
----
-
-## 📚 Documentation
-
-The [`Readme/Debian/`](Readme/Debian/) folder contains step-by-step documentation covering the Debian environment setup, configuration, installation, deployment, and other project implementation procedures.
-
----
-
-## 🖼️ Architecture & Diagrams
-
-The [`txt_png/png/`](txt_png/png/) folder contains the architecture diagrams and visual documentation used to illustrate the platform's infrastructure, components, and workflows.
-
----
 
 ## 📬 Contact
 
